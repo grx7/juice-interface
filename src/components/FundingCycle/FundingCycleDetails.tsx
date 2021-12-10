@@ -85,7 +85,7 @@ export default function FundingCycleDetails({
           {fromPerbicent(metadata?.reservedRate)}%
         </Descriptions.Item>
 
-        {isRecurring(fundingCycle) && hasFundingTarget(fundingCycle) && (
+        {isRecurring(fundingCycle) && (
           <Descriptions.Item
             label={
               <TooltipLabel
