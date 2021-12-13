@@ -38,17 +38,18 @@ export default function RedeemModal({
   } = useContext(ThemeContext)
   const { userAddress } = useContext(NetworkContext)
   const { contracts, transactor } = useContext(UserContext)
-  const { projectId, tokenSymbol, currentFC } = useContext(ProjectContext)
+  const { projectId, tokenSymbol, currentFC, terminal } =
+    useContext(ProjectContext)
 
   const currentOverflow = useContractReader<BigNumber>({
-    contract: ContractName.TerminalV1_1,
+    contract: terminal?.name,
     functionName: 'currentOverflowOf',
     args: projectId ? [projectId.toHexString()] : null,
     valueDidChange: bigNumbersDiff,
   })
 
   const maxClaimable = useContractReader<BigNumber>({
-    contract: ContractName.TerminalV1_1,
+    contract: terminal?.name,
     functionName: 'claimableOverflowOf',
     args:
       userAddress && projectId
@@ -60,18 +61,18 @@ export default function RedeemModal({
         projectId && userAddress
           ? [
               {
-                contract: ContractName.TerminalV1_1,
+                contract: terminal?.name,
                 eventName: 'Pay',
                 topics: [[], projectId.toHexString(), userAddress],
               },
               {
-                contract: ContractName.TerminalV1_1,
+                contract: terminal?.name,
                 eventName: 'Redeem',
                 topics: [projectId.toHexString(), userAddress],
               },
             ]
           : undefined,
-      [projectId, userAddress],
+      [projectId, userAddress, terminal?.name],
     ),
   })
 
@@ -122,7 +123,7 @@ export default function RedeemModal({
   const minAmount = rewardAmount?.mul(1000).div(1005)
 
   function redeem() {
-    if (!transactor || !contracts || !rewardAmount) return
+    if (!transactor || !contracts || !rewardAmount || !terminal) return
 
     setLoading(true)
 
@@ -131,7 +132,9 @@ export default function RedeemModal({
     if (!redeemWad || !projectId) return
 
     transactor(
-      contracts.TerminalV1_1,
+      terminal.version === '1.1'
+        ? contracts.TerminalV1_1
+        : contracts.TerminalV1,
       'redeem',
       [
         userAddress,
